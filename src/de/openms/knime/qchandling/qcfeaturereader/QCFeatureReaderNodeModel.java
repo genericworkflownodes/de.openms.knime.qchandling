@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package de.openms.knime.qchandling.qcticreader;
+package de.openms.knime.qchandling.qcfeaturereader;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +34,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.data.uri.URIPortObject;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -51,11 +52,12 @@ import org.knime.core.node.port.PortType;
 import de.openms.knime.qchandling.TSVReader;
 
 /**
- * This is the model implementation of QCTICReader.
+ * This is the model implementation of QCFeatureReader.
+ * 
  * 
  * @author Stephan Aiche
  */
-public class QCTICReaderNodeModel extends NodeModel {
+public class QCFeatureReaderNodeModel extends NodeModel {
 
 	/**
 	 * Static method that provides the incoming {@link PortType}s.
@@ -78,8 +80,22 @@ public class QCTICReaderNodeModel extends NodeModel {
 	/**
 	 * Constructor for the node model.
 	 */
-	protected QCTICReaderNodeModel() {
+	protected QCFeatureReaderNodeModel() {
 		super(getIncomingPorts(), getOutgoingPorts());
+	}
+
+	private DataTableSpec createColumnSpec() {
+		DataColumnSpec[] allColSpecs = new DataColumnSpec[4];
+		allColSpecs[0] = new DataColumnSpecCreator("MZ", DoubleCell.TYPE)
+				.createSpec();
+		allColSpecs[1] = new DataColumnSpecCreator("RT", DoubleCell.TYPE)
+				.createSpec();
+		allColSpecs[2] = new DataColumnSpecCreator("Intensity", DoubleCell.TYPE)
+				.createSpec();
+		allColSpecs[3] = new DataColumnSpecCreator("Charge", IntCell.TYPE)
+				.createSpec();
+		DataTableSpec outputSpec = new DataTableSpec(allColSpecs);
+		return outputSpec;
 	}
 
 	/**
@@ -89,41 +105,33 @@ public class QCTICReaderNodeModel extends NodeModel {
 	protected BufferedDataTable[] execute(final PortObject[] inData,
 			final ExecutionContext exec) throws Exception {
 
-		TSVReader ticTSVReader = new TSVReader(2) {
+		TSVReader featureTSVReader = new TSVReader(4) {
 
 			@Override
 			protected DataCell[] parseLine(String[] tokens) {
-				DataCell[] cells = new DataCell[2];
+				DataCell[] cells = new DataCell[4];
 				cells[0] = new DoubleCell(Double.parseDouble(tokens[0]));
 				cells[1] = new DoubleCell(Double.parseDouble(tokens[1]));
+				cells[2] = new DoubleCell(Double.parseDouble(tokens[2]));
+				cells[3] = new IntCell(Integer.parseInt(tokens[3]));
 
 				return cells;
 			}
 
 			@Override
 			protected String[] getHeader() {
-				return new String[] { "RT_(sec)", "TIC" };
+				return new String[] { "MZ", "RT", "Intensity", "Charge" };
 			}
 		};
 
 		BufferedDataContainer container = exec
 				.createDataContainer(createColumnSpec());
-		ticTSVReader.run(new File(((URIPortObject) inData[0]).getURIContents()
-				.get(0).getURI()), container, exec);
+		featureTSVReader.run(new File(((URIPortObject) inData[0])
+				.getURIContents().get(0).getURI()), container, exec);
 
 		container.close();
 		BufferedDataTable out = container.getTable();
 		return new BufferedDataTable[] { out };
-	}
-
-	private DataTableSpec createColumnSpec() {
-		DataColumnSpec[] allColSpecs = new DataColumnSpec[2];
-		allColSpecs[0] = new DataColumnSpecCreator("RT", DoubleCell.TYPE)
-				.createSpec();
-		allColSpecs[1] = new DataColumnSpecCreator("TIC", DoubleCell.TYPE)
-				.createSpec();
-		DataTableSpec outputSpec = new DataTableSpec(allColSpecs);
-		return outputSpec;
 	}
 
 	/**

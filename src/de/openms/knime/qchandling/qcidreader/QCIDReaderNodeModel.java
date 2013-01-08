@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package de.openms.knime.qchandling.qcticreader;
+package de.openms.knime.qchandling.qcidreader;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +34,8 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.data.uri.URIPortObject;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -51,11 +53,12 @@ import org.knime.core.node.port.PortType;
 import de.openms.knime.qchandling.TSVReader;
 
 /**
- * This is the model implementation of QCTICReader.
+ * This is the model implementation of QCIDReader. Reads ID tsv files from
+ * QCExporter
  * 
  * @author Stephan Aiche
  */
-public class QCTICReaderNodeModel extends NodeModel {
+public class QCIDReaderNodeModel extends NodeModel {
 
 	/**
 	 * Static method that provides the incoming {@link PortType}s.
@@ -78,8 +81,44 @@ public class QCTICReaderNodeModel extends NodeModel {
 	/**
 	 * Constructor for the node model.
 	 */
-	protected QCTICReaderNodeModel() {
+	protected QCIDReaderNodeModel() {
 		super(getIncomingPorts(), getOutgoingPorts());
+	}
+
+	private DataTableSpec createColumnSpec() {
+		// RT MZ uniqueness ProteinID target/decoy Score PeptideSequence Annots
+		// Similarity Charge TheoreticalWeight Oxidation (M)
+
+		DataColumnSpec[] allColSpecs = new DataColumnSpec[13];
+		allColSpecs[0] = new DataColumnSpecCreator("RT", DoubleCell.TYPE)
+				.createSpec();
+		allColSpecs[1] = new DataColumnSpecCreator("MZ", DoubleCell.TYPE)
+				.createSpec();
+		allColSpecs[2] = new DataColumnSpecCreator("uniqueness",
+				StringCell.TYPE).createSpec();
+		allColSpecs[3] = new DataColumnSpecCreator("ProteinID", StringCell.TYPE)
+				.createSpec();
+		allColSpecs[4] = new DataColumnSpecCreator("target/decoy",
+				StringCell.TYPE).createSpec();
+		allColSpecs[5] = new DataColumnSpecCreator("Score", DoubleCell.TYPE)
+				.createSpec();
+		allColSpecs[6] = new DataColumnSpecCreator("PeptideSequence",
+				StringCell.TYPE).createSpec();
+		allColSpecs[7] = new DataColumnSpecCreator("Annots", IntCell.TYPE)
+				.createSpec();
+		allColSpecs[8] = new DataColumnSpecCreator("Similarity",
+				DoubleCell.TYPE).createSpec();
+		allColSpecs[9] = new DataColumnSpecCreator("Charge", IntCell.TYPE)
+				.createSpec();
+		allColSpecs[10] = new DataColumnSpecCreator("TheoreticalWeight",
+				DoubleCell.TYPE).createSpec();
+		allColSpecs[11] = new DataColumnSpecCreator("Oxidation",
+				StringCell.TYPE).createSpec();
+		allColSpecs[12] = new DataColumnSpecCreator("M", StringCell.TYPE)
+				.createSpec();
+
+		DataTableSpec outputSpec = new DataTableSpec(allColSpecs);
+		return outputSpec;
 	}
 
 	/**
@@ -88,42 +127,56 @@ public class QCTICReaderNodeModel extends NodeModel {
 	@Override
 	protected BufferedDataTable[] execute(final PortObject[] inData,
 			final ExecutionContext exec) throws Exception {
-
-		TSVReader ticTSVReader = new TSVReader(2) {
+		TSVReader featureTSVReader = new TSVReader(13) {
 
 			@Override
 			protected DataCell[] parseLine(String[] tokens) {
-				DataCell[] cells = new DataCell[2];
+				DataCell[] cells = new DataCell[13];
+
 				cells[0] = new DoubleCell(Double.parseDouble(tokens[0]));
 				cells[1] = new DoubleCell(Double.parseDouble(tokens[1]));
+				cells[2] = new StringCell(tokens[2]);
+				cells[3] = new StringCell(tokens[3]);
+				cells[4] = new StringCell(tokens[4]);
+				cells[5] = new DoubleCell(Double.parseDouble(tokens[5]));
+				cells[6] = new StringCell(tokens[6]);
+				if (!"".equals(tokens[7]))
+					cells[7] = new IntCell(Integer.parseInt(tokens[7]));
+				else
+					cells[7] = new IntCell(0);
+				if (!"".equals(tokens[8]))
+					cells[8] = new DoubleCell(Double.parseDouble(tokens[8]));
+				else
+					cells[8] = new DoubleCell(0.0);
+				cells[9] = new IntCell(Integer.parseInt(tokens[9]));
+				cells[10] = new DoubleCell(Double.parseDouble(tokens[10]));
+				cells[11] = new StringCell(tokens[11]);
+				// can be empty
+				if (tokens.length == 13)
+					cells[12] = new StringCell(tokens[12]);
+				else
+					cells[12] = new StringCell("");
 
 				return cells;
 			}
 
 			@Override
 			protected String[] getHeader() {
-				return new String[] { "RT_(sec)", "TIC" };
+				return new String[] { "RT", "MZ", "uniqueness", "ProteinID",
+						"target/decoy", "Score", "PeptideSequence", "Annots",
+						"Similarity", "Charge", "TheoreticalWeight",
+						"Oxidation", "(M)" };
 			}
 		};
 
 		BufferedDataContainer container = exec
 				.createDataContainer(createColumnSpec());
-		ticTSVReader.run(new File(((URIPortObject) inData[0]).getURIContents()
-				.get(0).getURI()), container, exec);
+		featureTSVReader.run(new File(((URIPortObject) inData[0])
+				.getURIContents().get(0).getURI()), container, exec);
 
 		container.close();
 		BufferedDataTable out = container.getTable();
 		return new BufferedDataTable[] { out };
-	}
-
-	private DataTableSpec createColumnSpec() {
-		DataColumnSpec[] allColSpecs = new DataColumnSpec[2];
-		allColSpecs[0] = new DataColumnSpecCreator("RT", DoubleCell.TYPE)
-				.createSpec();
-		allColSpecs[1] = new DataColumnSpecCreator("TIC", DoubleCell.TYPE)
-				.createSpec();
-		DataTableSpec outputSpec = new DataTableSpec(allColSpecs);
-		return outputSpec;
 	}
 
 	/**

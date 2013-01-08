@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package de.openms.knime.qchandling.qcticreader;
+package de.openms.knime.qchandling.qcprecursorreader;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,11 +51,12 @@ import org.knime.core.node.port.PortType;
 import de.openms.knime.qchandling.TSVReader;
 
 /**
- * This is the model implementation of QCTICReader.
+ * This is the model implementation of QCPrecursorReader. Read the precursor
+ * file created by the QCCalculator
  * 
  * @author Stephan Aiche
  */
-public class QCTICReaderNodeModel extends NodeModel {
+public class QCPrecursorReaderNodeModel extends NodeModel {
 
 	/**
 	 * Static method that provides the incoming {@link PortType}s.
@@ -78,8 +79,22 @@ public class QCTICReaderNodeModel extends NodeModel {
 	/**
 	 * Constructor for the node model.
 	 */
-	protected QCTICReaderNodeModel() {
+	protected QCPrecursorReaderNodeModel() {
 		super(getIncomingPorts(), getOutgoingPorts());
+	}
+
+	private DataTableSpec createColumnSpec() {
+		// RT MZ uniqueness ProteinID target/decoy Score PeptideSequence Annots
+		// Similarity Charge TheoreticalWeight Oxidation (M)
+
+		DataColumnSpec[] allColSpecs = new DataColumnSpec[2];
+		allColSpecs[0] = new DataColumnSpecCreator("RT", DoubleCell.TYPE)
+				.createSpec();
+		allColSpecs[1] = new DataColumnSpecCreator("Precursor", DoubleCell.TYPE)
+				.createSpec();
+
+		DataTableSpec outputSpec = new DataTableSpec(allColSpecs);
+		return outputSpec;
 	}
 
 	/**
@@ -88,12 +103,12 @@ public class QCTICReaderNodeModel extends NodeModel {
 	@Override
 	protected BufferedDataTable[] execute(final PortObject[] inData,
 			final ExecutionContext exec) throws Exception {
-
-		TSVReader ticTSVReader = new TSVReader(2) {
+		TSVReader precursorTSVReader = new TSVReader(2) {
 
 			@Override
 			protected DataCell[] parseLine(String[] tokens) {
 				DataCell[] cells = new DataCell[2];
+
 				cells[0] = new DoubleCell(Double.parseDouble(tokens[0]));
 				cells[1] = new DoubleCell(Double.parseDouble(tokens[1]));
 
@@ -102,28 +117,18 @@ public class QCTICReaderNodeModel extends NodeModel {
 
 			@Override
 			protected String[] getHeader() {
-				return new String[] { "RT_(sec)", "TIC" };
+				return new String[] { "RT_(sec)", "Precursor" };
 			}
 		};
 
 		BufferedDataContainer container = exec
 				.createDataContainer(createColumnSpec());
-		ticTSVReader.run(new File(((URIPortObject) inData[0]).getURIContents()
-				.get(0).getURI()), container, exec);
+		precursorTSVReader.run(new File(((URIPortObject) inData[0])
+				.getURIContents().get(0).getURI()), container, exec);
 
 		container.close();
 		BufferedDataTable out = container.getTable();
 		return new BufferedDataTable[] { out };
-	}
-
-	private DataTableSpec createColumnSpec() {
-		DataColumnSpec[] allColSpecs = new DataColumnSpec[2];
-		allColSpecs[0] = new DataColumnSpecCreator("RT", DoubleCell.TYPE)
-				.createSpec();
-		allColSpecs[1] = new DataColumnSpecCreator("TIC", DoubleCell.TYPE)
-				.createSpec();
-		DataTableSpec outputSpec = new DataTableSpec(allColSpecs);
-		return outputSpec;
 	}
 
 	/**
@@ -182,5 +187,4 @@ public class QCTICReaderNodeModel extends NodeModel {
 			final ExecutionMonitor exec) throws IOException,
 			CanceledExecutionException {
 	}
-
 }
