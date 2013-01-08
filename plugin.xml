@@ -1,5 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?eclipse version="3.4"?>
-<plugin>
 
+<plugin>
+	<extension point="org.knime.workbench.repository.categories">
+		<category description="/community/OpenMS" icon="icons/category.png" path="/community" name="OpenMS" level-id="OpenMS"/>
+		<category description="/community/OpenMS/QCFileHandling" icon="icons/category.png" path="/community/OpenMS" name="QCFileHandling" level-id="QCFileHandling"/>		
+	</extension>
+   	<extension point="org.knime.workbench.repository.nodes">
+   		<node category-path="/community/OpenMS/QCFileHandling" factory-class="de.openms.knime.qchandling.qcticreader.QCTICReaderNodeFactory" id="de.openms.knime.qchandling.qcticreader.QCTICReaderNodeFactory"/>
+	</extension>
 </plugin>
