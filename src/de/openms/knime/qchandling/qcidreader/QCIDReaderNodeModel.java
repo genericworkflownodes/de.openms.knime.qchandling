@@ -89,7 +89,7 @@ public class QCIDReaderNodeModel extends NodeModel {
 		// RT MZ uniqueness ProteinID target/decoy Score PeptideSequence Annots
 		// Similarity Charge TheoreticalWeight Oxidation (M)
 
-		DataColumnSpec[] allColSpecs = new DataColumnSpec[13];
+		DataColumnSpec[] allColSpecs = new DataColumnSpec[12];
 		allColSpecs[0] = new DataColumnSpecCreator("RT", DoubleCell.TYPE)
 				.createSpec();
 		allColSpecs[1] = new DataColumnSpecCreator("MZ", DoubleCell.TYPE)
@@ -98,7 +98,7 @@ public class QCIDReaderNodeModel extends NodeModel {
 				StringCell.TYPE).createSpec();
 		allColSpecs[3] = new DataColumnSpecCreator("ProteinID", StringCell.TYPE)
 				.createSpec();
-		allColSpecs[4] = new DataColumnSpecCreator("target/decoy",
+		allColSpecs[4] = new DataColumnSpecCreator("target-decoy",
 				StringCell.TYPE).createSpec();
 		allColSpecs[5] = new DataColumnSpecCreator("Score", DoubleCell.TYPE)
 				.createSpec();
@@ -112,10 +112,8 @@ public class QCIDReaderNodeModel extends NodeModel {
 				.createSpec();
 		allColSpecs[10] = new DataColumnSpecCreator("TheoreticalWeight",
 				DoubleCell.TYPE).createSpec();
-		allColSpecs[11] = new DataColumnSpecCreator("Oxidation",
+		allColSpecs[11] = new DataColumnSpecCreator("Oxidation_M",
 				StringCell.TYPE).createSpec();
-		allColSpecs[12] = new DataColumnSpecCreator("M", StringCell.TYPE)
-				.createSpec();
 
 		DataTableSpec outputSpec = new DataTableSpec(allColSpecs);
 		return outputSpec;
@@ -127,11 +125,11 @@ public class QCIDReaderNodeModel extends NodeModel {
 	@Override
 	protected BufferedDataTable[] execute(final PortObject[] inData,
 			final ExecutionContext exec) throws Exception {
-		TSVReader featureTSVReader = new TSVReader(13) {
+		TSVReader featureTSVReader = new TSVReader(12) {
 
 			@Override
 			protected DataCell[] parseLine(String[] tokens) {
-				DataCell[] cells = new DataCell[13];
+				DataCell[] cells = new DataCell[12];
 
 				cells[0] = new DoubleCell(Double.parseDouble(tokens[0]));
 				cells[1] = new DoubleCell(Double.parseDouble(tokens[1]));
@@ -151,11 +149,6 @@ public class QCIDReaderNodeModel extends NodeModel {
 				cells[9] = new IntCell(Integer.parseInt(tokens[9]));
 				cells[10] = new DoubleCell(Double.parseDouble(tokens[10]));
 				cells[11] = new StringCell(tokens[11]);
-				// can be empty
-				if (tokens.length == 13)
-					cells[12] = new StringCell(tokens[12]);
-				else
-					cells[12] = new StringCell("");
 
 				return cells;
 			}
@@ -165,7 +158,7 @@ public class QCIDReaderNodeModel extends NodeModel {
 				return new String[] { "RT", "MZ", "uniqueness", "ProteinID",
 						"target/decoy", "Score", "PeptideSequence", "Annots",
 						"Similarity", "Charge", "TheoreticalWeight",
-						"Oxidation", "(M)" };
+						"Oxidation_(M)" };
 			}
 		};
 
