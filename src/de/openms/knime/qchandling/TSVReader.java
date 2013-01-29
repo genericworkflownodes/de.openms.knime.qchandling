@@ -51,15 +51,30 @@ public abstract class TSVReader {
 	 * 
 	 * @param numberOfColumns
 	 *            The number of expected columns.
+	 * @param ignoreAdditionalContent
+	 *            If true additional columns that do not fit to the expected
+	 *            format are silently ignored instead of generating an error.
+	 *            Default is false.
 	 */
-	public TSVReader(final int numberOfColumns) {
+	public TSVReader(final int numberOfColumns,
+			final boolean ignoreAdditionalContent) {
 		m_numberOfColumns = numberOfColumns;
+		m_ignoreAdditionalContent = ignoreAdditionalContent;
+	}
+
+	public TSVReader(final int numberOfColumns) {
+		this(numberOfColumns, false);
 	}
 
 	/**
 	 * The number of columns of the tsv file to read.
 	 */
 	private final int m_numberOfColumns;
+
+	/**
+	 * Flag indicating if additional columns are ignored or reported as error.
+	 */
+	private final boolean m_ignoreAdditionalContent;
 
 	/**
 	 * The logger instance.
@@ -89,7 +104,7 @@ public abstract class TSVReader {
 	 *             If the headers do not match.
 	 */
 	private void compareHeader(String[] header) throws Exception {
-		for (int i = 0; i < header.length; ++i) {
+		for (int i = 0; i < m_numberOfColumns; ++i) {
 			if (!header[i].equals(getHeader()[i])) {
 				throw new Exception("Invalid header element: Expected "
 						+ getHeader()[i] + " but got " + header[i] + ".");
@@ -119,9 +134,10 @@ public abstract class TSVReader {
 
 			// skip but check the header
 			String header = brReader.readLine();
-			String[] headerElements = header.split(SEPARATOR, -1);
+			String[] headerElements = header.trim().split(SEPARATOR, -1);
 
-			if (headerElements.length != m_numberOfColumns)
+			if (((headerElements.length > m_numberOfColumns) && !m_ignoreAdditionalContent)
+					|| (headerElements.length < m_numberOfColumns))
 				throw new Exception("Invalid file header. Expected "
 						+ m_numberOfColumns + " columns but got "
 						+ headerElements.length + ".");
@@ -135,7 +151,7 @@ public abstract class TSVReader {
 				if ("".equals(line.trim()))
 					continue;
 
-				String[] tokens = line.split(SEPARATOR, -1);
+				String[] tokens = line.trim().split(SEPARATOR, -1);
 
 				try {
 					// we try to parse and leave it to the deriving class to

@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package de.openms.knime.qchandling.qcidreader;
+package de.openms.knime.qchandling.qcsetidreader;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +34,6 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.uri.URIPortObject;
 import org.knime.core.node.BufferedDataContainer;
@@ -53,12 +52,12 @@ import org.knime.core.node.port.PortType;
 import de.openms.knime.qchandling.TSVReader;
 
 /**
- * This is the model implementation of QCIDReader. Reads ID tsv files from
- * QCExporter
+ * This is the model implementation of QCPrecursorReader. Read the precursor
+ * file created by the QCCalculator
  * 
  * @author Stephan Aiche
  */
-public class QCIDReaderNodeModel extends NodeModel {
+public class QCSetIdReaderNodeModel extends NodeModel {
 
 	/**
 	 * Static method that provides the incoming {@link PortType}s.
@@ -81,7 +80,7 @@ public class QCIDReaderNodeModel extends NodeModel {
 	/**
 	 * Constructor for the node model.
 	 */
-	protected QCIDReaderNodeModel() {
+	protected QCSetIdReaderNodeModel() {
 		super(getIncomingPorts(), getOutgoingPorts());
 	}
 
@@ -89,21 +88,19 @@ public class QCIDReaderNodeModel extends NodeModel {
 		// RT MZ uniqueness ProteinID target/decoy Score PeptideSequence Annots
 		// Similarity Charge TheoreticalWeight Oxidation (M)
 
-		DataColumnSpec[] allColSpecs = new DataColumnSpec[7];
+		DataColumnSpec[] allColSpecs = new DataColumnSpec[6];
 
-		allColSpecs[0] = new DataColumnSpecCreator("RT", DoubleCell.TYPE)
+		allColSpecs[0] = new DataColumnSpecCreator("qp", StringCell.TYPE)
 				.createSpec();
-		allColSpecs[1] = new DataColumnSpecCreator("MZ", DoubleCell.TYPE)
+		allColSpecs[1] = new DataColumnSpecCreator("Q1", DoubleCell.TYPE)
 				.createSpec();
-		allColSpecs[2] = new DataColumnSpecCreator("Score", DoubleCell.TYPE)
+		allColSpecs[2] = new DataColumnSpecCreator("Q2", DoubleCell.TYPE)
 				.createSpec();
-		allColSpecs[3] = new DataColumnSpecCreator("PeptideSequence",
-				StringCell.TYPE).createSpec();
-		allColSpecs[4] = new DataColumnSpecCreator("Charge", IntCell.TYPE)
+		allColSpecs[3] = new DataColumnSpecCreator("Q3", DoubleCell.TYPE)
 				.createSpec();
-		allColSpecs[5] = new DataColumnSpecCreator("TheoreticalWeight",
-				DoubleCell.TYPE).createSpec();
-		allColSpecs[6] = new DataColumnSpecCreator("DeltaPpm", DoubleCell.TYPE)
+		allColSpecs[4] = new DataColumnSpecCreator("max", DoubleCell.TYPE)
+				.createSpec();
+		allColSpecs[5] = new DataColumnSpecCreator("min", DoubleCell.TYPE)
 				.createSpec();
 
 		DataTableSpec outputSpec = new DataTableSpec(allColSpecs);
@@ -116,33 +113,31 @@ public class QCIDReaderNodeModel extends NodeModel {
 	@Override
 	protected BufferedDataTable[] execute(final PortObject[] inData,
 			final ExecutionContext exec) throws Exception {
-		TSVReader featureTSVReader = new TSVReader(7, true) {
+		TSVReader precursorTSVReader = new TSVReader(6) {
 
 			@Override
 			protected DataCell[] parseLine(String[] tokens) {
-				DataCell[] cells = new DataCell[7];
+				DataCell[] cells = new DataCell[6];
 
-				cells[0] = new DoubleCell(Double.parseDouble(tokens[0]));
+				cells[0] = new StringCell(tokens[0]);
 				cells[1] = new DoubleCell(Double.parseDouble(tokens[1]));
 				cells[2] = new DoubleCell(Double.parseDouble(tokens[2]));
-				cells[3] = new StringCell(tokens[3]);
-				cells[4] = new IntCell(Integer.parseInt(tokens[4]));
+				cells[3] = new DoubleCell(Double.parseDouble(tokens[3]));
+				cells[4] = new DoubleCell(Double.parseDouble(tokens[4]));
 				cells[5] = new DoubleCell(Double.parseDouble(tokens[5]));
-				cells[6] = new DoubleCell(Double.parseDouble(tokens[6]));
 
 				return cells;
 			}
 
 			@Override
 			protected String[] getHeader() {
-				return new String[] { "RT", "MZ", "Score", "PeptideSequence",
-						"Charge", "TheoreticalWeight", "delta_ppm" };
+				return new String[] { "qp", "Q1", "Q2", "Q3", "max", "min" };
 			}
 		};
 
 		BufferedDataContainer container = exec
 				.createDataContainer(createColumnSpec());
-		featureTSVReader.run(new File(((URIPortObject) inData[0])
+		precursorTSVReader.run(new File(((URIPortObject) inData[0])
 				.getURIContents().get(0).getURI()), container, exec);
 
 		container.close();
@@ -206,5 +201,4 @@ public class QCIDReaderNodeModel extends NodeModel {
 			final ExecutionMonitor exec) throws IOException,
 			CanceledExecutionException {
 	}
-
 }
