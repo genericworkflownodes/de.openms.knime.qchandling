@@ -12,5 +12,6 @@
 		<node category-path="/community/OpenMS/QCFileHandling" factory-class="de.openms.knime.qchandling.qcidreader.QCIDReaderNodeFactory" id="de.openms.knime.qchandling.qcidreader.QCIDReaderNodeFactory"/>
 		<node category-path="/community/OpenMS/QCFileHandling" factory-class="de.openms.knime.qchandling.qcprecursorreader.QCPrecursorReaderNodeFactory" id="de.openms.knime.qchandling.qcprecursorreader.QCPrecursorReaderNodeFactory"/>
 		<node category-path="/community/OpenMS/QCFileHandling" factory-class="de.openms.knime.qchandling.qcsetidreader.QCSetIdReaderNodeFactory" id="de.openms.knime.qchandling.qcsetidreader.QCSetIdReaderNodeFactory"/>
-	</extension>
+		<node category-path="/community/OpenMS/QCFileHandling" factory-class="de.openms.knime.qchandling.qcioninjectiontimereader.QCIonInjectionTimeReaderNodeFactory" id="de.openms.knime.qchandling.qcioninjectiontimereader.QCIonInjectionTimeReaderNodeFactory"/>
+</extension>
 </plugin>
