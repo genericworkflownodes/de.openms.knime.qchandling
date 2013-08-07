@@ -117,7 +117,8 @@ public class QCPrecursorReaderNodeModel extends NodeModel {
 
 			@Override
 			protected String[] getHeader() {
-				return new String[] { "RT_(sec)", "Precursor" };
+				// return new String[] { "RT_(sec)", "Precursor" };
+				return new String[] { "MS:1000894_[sec]", "MS:1000040" };
 			}
 		};
 

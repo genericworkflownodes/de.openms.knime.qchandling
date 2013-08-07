@@ -102,7 +102,8 @@ public class QCTICReaderNodeModel extends NodeModel {
 
 			@Override
 			protected String[] getHeader() {
-				return new String[] { "RT_(sec)", "TIC" };
+				// return new String[] { "RT_(sec)", "TIC" };
+				return new String[] { "MS:1000894_[sec]", "MS:1000285" };
 			}
 		};
 
