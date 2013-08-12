@@ -29,6 +29,7 @@ package de.openms.knime.qchandling;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 
 import org.knime.core.data.DataCell;
@@ -36,6 +37,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.BufferedDataContainer;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 
@@ -45,6 +47,59 @@ import org.knime.core.node.NodeLogger;
  * @author aiche
  */
 public abstract class TSVReader {
+
+	/**
+	 * Exception indicating that the parsed header doesn't correspond the header
+	 * structure expected by the TSVReader.
+	 * 
+	 * @author aiche
+	 */
+	public static class InvalidHeaderException extends Exception {
+
+		/**
+		 * The serialVersionUID
+		 */
+		private static final long serialVersionUID = 3447134484787762192L;
+
+		/**
+		 * Invalid header was detected by differing number of columns.
+		 * 
+		 * @param expected
+		 *            Expected number of columns.
+		 * @param actual
+		 *            Actual number of columns.
+		 */
+		public InvalidHeaderException(int expected, int actual) {
+			super("Invalid file header. Expected " + expected
+					+ " columns but got " + actual + ".");
+		}
+
+		/**
+		 * Invalid header was detected by differing column header.
+		 * 
+		 * @param expected
+		 *            Expected column header.
+		 * @param actual
+		 *            Actual column header.
+		 */
+		public InvalidHeaderException(String expected, String actual) {
+			super("Invalid header element: Expected " + expected + " but got "
+					+ actual + ".");
+		}
+	}
+
+	public static class InvalidLineException extends Exception {
+
+		/**
+		 * The serialVersionUID
+		 */
+		private static final long serialVersionUID = 8638283665268501023L;
+
+		public InvalidLineException(int lineNumber, String offendingLine) {
+			super("Invalid file. Offending line: nr=" + lineNumber + "; "
+					+ offendingLine);
+		}
+	}
 
 	/**
 	 * Construct a TSVReader for the given number of columns.
@@ -103,11 +158,10 @@ public abstract class TSVReader {
 	 * @throws Exception
 	 *             If the headers do not match.
 	 */
-	private void compareHeader(String[] header) throws Exception {
+	private void compareHeader(String[] header) throws InvalidHeaderException {
 		for (int i = 0; i < m_numberOfColumns; ++i) {
 			if (!header[i].equals(getHeader()[i])) {
-				throw new Exception("Invalid header element: Expected "
-						+ getHeader()[i] + " but got " + header[i] + ".");
+				throw new InvalidHeaderException(getHeader()[i], header[i]);
 			}
 		}
 	}
@@ -120,10 +174,12 @@ public abstract class TSVReader {
 	 *            extracted.
 	 * @return
 	 */
-	protected abstract DataCell[] parseLine(String[] tokens) throws Exception;
+	protected abstract DataCell[] parseLine(String[] tokens) throws IOException;
 
 	public void run(File tsvFile, BufferedDataContainer container,
-			final ExecutionContext exec) throws Exception {
+			final ExecutionContext exec) throws IOException,
+			InvalidLineException, CanceledExecutionException,
+			InvalidHeaderException {
 		BufferedReader brReader = null;
 		try {
 			// read the data and fill the table
@@ -138,9 +194,8 @@ public abstract class TSVReader {
 
 			if (((headerElements.length > m_numberOfColumns) && !m_ignoreAdditionalContent)
 					|| (headerElements.length < m_numberOfColumns))
-				throw new Exception("Invalid file header. Expected "
-						+ m_numberOfColumns + " columns but got "
-						+ headerElements.length + ".");
+				throw new InvalidHeaderException(m_numberOfColumns,
+						headerElements.length);
 
 			compareHeader(headerElements);
 
@@ -162,16 +217,14 @@ public abstract class TSVReader {
 					DataRow row = new DefaultRow(key, cells);
 					container.addRowToTable(row);
 				} catch (Exception ex) {
-					throw new Exception(
-							"Invalid qcml-TIC file. Offending line: nr="
-									+ rowIdx + "; " + line);
+					throw new InvalidLineException(rowIdx, line);
 				}
 
 				exec.checkCanceled();
 				++rowIdx;
 			}
 
-		} catch (Exception ex) {
+		} catch (IOException ex) {
 			logger.error(ex.getMessage());
 			throw ex;
 		} finally {
