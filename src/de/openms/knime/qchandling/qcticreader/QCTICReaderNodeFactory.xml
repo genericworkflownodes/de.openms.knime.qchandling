@@ -4,35 +4,15 @@
     <name>QCTICReader</name>
     
     <shortDescription>
-        
+        Reads QC Total Ion Current (TIC) information from a CSV file generated with the QCExporter.
     </shortDescription>
     
     <fullDescription>
-        <intro>Insert long description here...</intro>
-        
-        
-        <option name="short name of first option (like in the dialog)">description of first option</option>
-        <option name="short name of second option (like in the dialog)">description of second option</option>
-        <!-- possibly more options that can also be grouped by tabs -->
-        <!--
-        <tab name="Standard Options">
-            <option name="short name of first option (like in the dialog)">description of first option</option>
-            <option name="short name of second option (like in the dialog)">description of second option</option>
-        </tab>
-        <tab name="Advanced Options">
-            <option name="short name of first advanced option (like in the dialog)">description of first advanced option</option>
-        </tab>
-        -->
+        <intro>Reads QC Total Ion Current (TIC) information from a CSV file generated with the QCExporter.</intro>
     </fullDescription>
     
     <ports>
-        <inPort index="0" name="In-Port name">Description of first input port...</inPort>
-        <!-- possibly more input ports here-->
-        <outPort index="0" name="Out-Port name">Description of first output port...</outPort>
-        <!-- possibly more output ports here-->
-    </ports>    
-    <views>
-        <view index="0" name="name of first view">Description of first view...</view>
-        <!--view index="1" name="name of second view">Description of second view...</view-->
-    </views>
+        <inPort index="0" name="QCTIC file [csv]">CSV file containing the QC Total Ion Current (TIC) information created by the QCExporter.</inPort>
+        <outPort index="0" name="QCTIC table">Table containing the QC Total Ion Current (TIC) information.</outPort>
+    </ports>  
 </knimeNode>
