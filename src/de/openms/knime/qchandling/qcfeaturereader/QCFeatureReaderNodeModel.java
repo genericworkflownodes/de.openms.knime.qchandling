@@ -85,7 +85,7 @@ public class QCFeatureReaderNodeModel extends NodeModel {
 	}
 
 	private DataTableSpec createColumnSpec() {
-		DataColumnSpec[] allColSpecs = new DataColumnSpec[4];
+		DataColumnSpec[] allColSpecs = new DataColumnSpec[7];
 		allColSpecs[0] = new DataColumnSpecCreator("MZ", DoubleCell.TYPE)
 				.createSpec();
 		allColSpecs[1] = new DataColumnSpecCreator("RT", DoubleCell.TYPE)
@@ -94,6 +94,13 @@ public class QCFeatureReaderNodeModel extends NodeModel {
 				.createSpec();
 		allColSpecs[3] = new DataColumnSpecCreator("Charge", IntCell.TYPE)
 				.createSpec();
+		allColSpecs[4] = new DataColumnSpecCreator("Quality", DoubleCell.TYPE)
+				.createSpec();
+		allColSpecs[5] = new DataColumnSpecCreator("FWHM", DoubleCell.TYPE)
+				.createSpec();
+		allColSpecs[6] = new DataColumnSpecCreator("IDs", IntCell.TYPE)
+				.createSpec();
+
 		DataTableSpec outputSpec = new DataTableSpec(allColSpecs);
 		return outputSpec;
 	}
@@ -105,22 +112,38 @@ public class QCFeatureReaderNodeModel extends NodeModel {
 	protected BufferedDataTable[] execute(final PortObject[] inData,
 			final ExecutionContext exec) throws Exception {
 
-		TSVReader featureTSVReader = new TSVReader(4) {
+		TSVReader featureTSVReader = new TSVReader(7, false, true) {
 
 			@Override
 			protected DataCell[] parseLine(String[] tokens) {
-				DataCell[] cells = new DataCell[4];
+				DataCell[] cells = new DataCell[7];
 				cells[0] = new DoubleCell(Double.parseDouble(tokens[0]));
 				cells[1] = new DoubleCell(Double.parseDouble(tokens[1]));
 				cells[2] = new DoubleCell(Double.parseDouble(tokens[2]));
 				cells[3] = new IntCell(Integer.parseInt(tokens[3]));
+
+				if (tokens.length > 4)
+					cells[4] = new DoubleCell(Double.parseDouble(tokens[4]));
+				else
+					cells[4] = new DoubleCell(-1.0);
+
+				if (tokens.length > 5)
+					cells[5] = new DoubleCell(Double.parseDouble(tokens[5]));
+				else
+					cells[5] = new DoubleCell(-1.0);
+
+				if (tokens.length > 6)
+					cells[6] = new IntCell(Integer.parseInt(tokens[6]));
+				else
+					cells[6] = new IntCell(-1);
 
 				return cells;
 			}
 
 			@Override
 			protected String[] getHeader() {
-				return new String[] { "MZ", "RT", "Intensity", "Charge" };
+				return new String[] { "MZ", "RT", "Intensity", "Charge",
+						"Quality", "FWHM", "IDs" };
 			}
 		};
 

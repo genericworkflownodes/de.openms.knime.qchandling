@@ -110,15 +110,41 @@ public abstract class TSVReader {
 	 *            If true additional columns that do not fit to the expected
 	 *            format are silently ignored instead of generating an error.
 	 *            Default is false.
+	 * @param ignoreMissingColumns
+	 *            If true missing columns are not raising an exception instead
+	 *            they are filled with empty default values.
+	 */
+	public TSVReader(final int numberOfColumns,
+			final boolean ignoreAdditionalContent,
+			final boolean ignoreMissingColumns) {
+		m_numberOfColumns = numberOfColumns;
+		m_ignoreAdditionalContent = ignoreAdditionalContent;
+		m_ignoreMissingColumns = ignoreMissingColumns;
+	}
+
+	/**
+	 * Construct a TSVReader for the given number of columns.
+	 * 
+	 * @param numberOfColumns
+	 *            The number of expected columns.
+	 * @param ignoreAdditionalContent
+	 *            If true additional columns that do not fit to the expected
+	 *            format are silently ignored instead of generating an error.
+	 *            Default is false.
 	 */
 	public TSVReader(final int numberOfColumns,
 			final boolean ignoreAdditionalContent) {
-		m_numberOfColumns = numberOfColumns;
-		m_ignoreAdditionalContent = ignoreAdditionalContent;
+		this(numberOfColumns, ignoreAdditionalContent, false);
 	}
 
+	/**
+	 * Construct a TSVReader for the given number of columns.
+	 * 
+	 * @param numberOfColumns
+	 *            The number of expected columns.
+	 */
 	public TSVReader(final int numberOfColumns) {
-		this(numberOfColumns, false);
+		this(numberOfColumns, false, false);
 	}
 
 	/**
@@ -130,6 +156,11 @@ public abstract class TSVReader {
 	 * Flag indicating if additional columns are ignored or reported as error.
 	 */
 	private final boolean m_ignoreAdditionalContent;
+
+	/**
+	 * Flag indicating if missing columns are treated as errors.
+	 */
+	private final boolean m_ignoreMissingColumns;
 
 	/**
 	 * The logger instance.
@@ -159,7 +190,7 @@ public abstract class TSVReader {
 	 *             If the headers do not match.
 	 */
 	private void compareHeader(String[] header) throws InvalidHeaderException {
-		for (int i = 0; i < m_numberOfColumns; ++i) {
+		for (int i = 0; i < m_numberOfColumns && i < header.length; ++i) {
 			if (!header[i].equals(getHeader()[i])) {
 				throw new InvalidHeaderException(getHeader()[i], header[i]);
 			}
@@ -193,7 +224,7 @@ public abstract class TSVReader {
 			String[] headerElements = header.trim().split(SEPARATOR, -1);
 
 			if (((headerElements.length > m_numberOfColumns) && !m_ignoreAdditionalContent)
-					|| (headerElements.length < m_numberOfColumns))
+					|| (headerElements.length < m_numberOfColumns && !m_ignoreMissingColumns))
 				throw new InvalidHeaderException(m_numberOfColumns,
 						headerElements.length);
 
