@@ -11,48 +11,48 @@ import org.knime.core.node.NodeView;
  * @author Stephan Aiche and the OpenMS Team
  */
 public class QCIonInjectionTimeReaderNodeFactory extends
-		NodeFactory<QCIonInjectionTimeReaderNodeModel> {
+        NodeFactory<QCIonInjectionTimeReaderNodeModel> {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public QCIonInjectionTimeReaderNodeModel createNodeModel() {
-		return new QCIonInjectionTimeReaderNodeModel();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public QCIonInjectionTimeReaderNodeModel createNodeModel() {
+        return new QCIonInjectionTimeReaderNodeModel();
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public int getNrNodeViews() {
-		return 0;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNrNodeViews() {
+        return 0;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public NodeView<QCIonInjectionTimeReaderNodeModel> createNodeView(
-			final int viewIndex,
-			final QCIonInjectionTimeReaderNodeModel nodeModel) {
-		return null;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<QCIonInjectionTimeReaderNodeModel> createNodeView(
+            final int viewIndex,
+            final QCIonInjectionTimeReaderNodeModel nodeModel) {
+        return null;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean hasDialog() {
-		return false;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDialog() {
+        return false;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public NodeDialogPane createNodeDialogPane() {
-		return null;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return null;
+    }
 
 }

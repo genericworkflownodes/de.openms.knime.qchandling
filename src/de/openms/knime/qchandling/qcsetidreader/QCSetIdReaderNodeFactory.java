@@ -37,47 +37,47 @@ import org.knime.core.node.NodeView;
  * @author Stephan Aiche
  */
 public class QCSetIdReaderNodeFactory extends
-		NodeFactory<QCSetIdReaderNodeModel> {
+        NodeFactory<QCSetIdReaderNodeModel> {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public QCSetIdReaderNodeModel createNodeModel() {
-		return new QCSetIdReaderNodeModel();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public QCSetIdReaderNodeModel createNodeModel() {
+        return new QCSetIdReaderNodeModel();
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public int getNrNodeViews() {
-		return 0;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNrNodeViews() {
+        return 0;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public NodeView<QCSetIdReaderNodeModel> createNodeView(
-			final int viewIndex, final QCSetIdReaderNodeModel nodeModel) {
-		return null;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<QCSetIdReaderNodeModel> createNodeView(
+            final int viewIndex, final QCSetIdReaderNodeModel nodeModel) {
+        return null;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean hasDialog() {
-		return false;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDialog() {
+        return false;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public NodeDialogPane createNodeDialogPane() {
-		return null;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return null;
+    }
 
 }
