@@ -48,219 +48,288 @@ import org.knime.core.node.NodeLogger;
  */
 public abstract class TSVReader {
 
-	/**
-	 * Exception indicating that the parsed header doesn't correspond the header
-	 * structure expected by the TSVReader.
-	 * 
-	 * @author aiche
-	 */
-	public static class InvalidHeaderException extends Exception {
+    /**
+     * Exception indicating that the parsed header doesn't correspond the header
+     * structure expected by the TSVReader.
+     * 
+     * @author aiche
+     */
+    public static class InvalidHeaderException extends Exception {
 
-		/**
-		 * The serialVersionUID
-		 */
-		private static final long serialVersionUID = 3447134484787762192L;
+        /**
+         * The serialVersionUID
+         */
+        private static final long serialVersionUID = 3447134484787762192L;
 
-		/**
-		 * Invalid header was detected by differing number of columns.
-		 * 
-		 * @param expected
-		 *            Expected number of columns.
-		 * @param actual
-		 *            Actual number of columns.
-		 */
-		public InvalidHeaderException(int expected, int actual) {
-			super("Invalid file header. Expected " + expected
-					+ " columns but got " + actual + ".");
-		}
+        /**
+         * Invalid header was detected by differing number of columns.
+         * 
+         * @param expected
+         *            Expected number of columns.
+         * @param actual
+         *            Actual number of columns.
+         */
+        public InvalidHeaderException(int expected, int actual) {
+            super("Invalid file header. Expected " + expected
+                    + " columns but got " + actual + ".");
+        }
 
-		/**
-		 * Invalid header was detected by differing column header.
-		 * 
-		 * @param expected
-		 *            Expected column header.
-		 * @param actual
-		 *            Actual column header.
-		 */
-		public InvalidHeaderException(String expected, String actual) {
-			super("Invalid header element: Expected " + expected + " but got "
-					+ actual + ".");
-		}
-	}
+        /**
+         * Invalid header was detected by differing column header.
+         * 
+         * @param expected
+         *            Expected column header.
+         * @param actual
+         *            Actual column header.
+         */
+        public InvalidHeaderException(String expected, String actual) {
+            super("Invalid header element: Expected " + expected + " but got "
+                    + actual + ".");
+        }
 
-	public static class InvalidLineException extends Exception {
+        /**
+         * General purpose constructor giving a message for the user.
+         * 
+         * @param message
+         *            The message.
+         */
+        public InvalidHeaderException(String message) {
+            super(message);
+        }
+    }
 
-		/**
-		 * The serialVersionUID
-		 */
-		private static final long serialVersionUID = 8638283665268501023L;
+    /**
+     * Exception indicating an invalid line in the tsv file.
+     * 
+     * @author aiche
+     */
+    public static class InvalidLineException extends Exception {
 
-		public InvalidLineException(int lineNumber, String offendingLine) {
-			super("Invalid file. Offending line: nr=" + lineNumber + "; "
-					+ offendingLine);
-		}
-	}
+        /**
+         * The serialVersionUID.
+         */
+        private static final long serialVersionUID = 8638283665268501023L;
 
-	/**
-	 * Construct a TSVReader for the given number of columns.
-	 * 
-	 * @param numberOfColumns
-	 *            The number of expected columns.
-	 * @param ignoreAdditionalContent
-	 *            If true additional columns that do not fit to the expected
-	 *            format are silently ignored instead of generating an error.
-	 *            Default is false.
-	 * @param ignoreMissingColumns
-	 *            If true missing columns are not raising an exception instead
-	 *            they are filled with empty default values.
-	 */
-	public TSVReader(final int numberOfColumns,
-			final boolean ignoreAdditionalContent,
-			final boolean ignoreMissingColumns) {
-		m_numberOfColumns = numberOfColumns;
-		m_ignoreAdditionalContent = ignoreAdditionalContent;
-		m_ignoreMissingColumns = ignoreMissingColumns;
-	}
+        /**
+         * C'tor.
+         * 
+         * @param lineNumber
+         *            The number of the line causing the error.
+         * @param offendingLine
+         *            The actual line causing the error.
+         */
+        public InvalidLineException(int lineNumber, String offendingLine) {
+            super("Invalid file. Offending line: nr=" + lineNumber + "; "
+                    + offendingLine);
+        }
 
-	/**
-	 * Construct a TSVReader for the given number of columns.
-	 * 
-	 * @param numberOfColumns
-	 *            The number of expected columns.
-	 * @param ignoreAdditionalContent
-	 *            If true additional columns that do not fit to the expected
-	 *            format are silently ignored instead of generating an error.
-	 *            Default is false.
-	 */
-	public TSVReader(final int numberOfColumns,
-			final boolean ignoreAdditionalContent) {
-		this(numberOfColumns, ignoreAdditionalContent, false);
-	}
+        /**
+         * C'tor.
+         * 
+         * @param lineNumber
+         *            The number of the line causing the error.
+         * @param offendingLine
+         *            The actual line causing the error.
+         * @param cause
+         *            The cause to preserve the stack trace.
+         */
+        public InvalidLineException(int lineNumber, String offendingLine,
+                Throwable cause) {
+            super("Invalid file. Offending line: nr=" + lineNumber + "; "
+                    + offendingLine, cause);
+        }
+    }
 
-	/**
-	 * Construct a TSVReader for the given number of columns.
-	 * 
-	 * @param numberOfColumns
-	 *            The number of expected columns.
-	 */
-	public TSVReader(final int numberOfColumns) {
-		this(numberOfColumns, false, false);
-	}
+    /**
+     * Construct a TSVReader for the given number of columns.
+     * 
+     * @param numberOfColumns
+     *            The number of expected columns.
+     * @param ignoreAdditionalContent
+     *            If true additional columns that do not fit to the expected
+     *            format are silently ignored instead of generating an error.
+     *            Default is false.
+     * @param ignoreMissingColumns
+     *            If true missing columns are not raising an exception instead
+     *            they are filled with empty default values.
+     */
+    public TSVReader(final int numberOfColumns,
+            final boolean ignoreAdditionalContent,
+            final boolean ignoreMissingColumns) {
+        m_numberOfColumns = numberOfColumns;
+        m_ignoreAdditionalContent = ignoreAdditionalContent;
+        m_ignoreMissingColumns = ignoreMissingColumns;
+    }
 
-	/**
-	 * The number of columns of the tsv file to read.
-	 */
-	private final int m_numberOfColumns;
+    /**
+     * Construct a TSVReader for the given number of columns.
+     * 
+     * @param numberOfColumns
+     *            The number of expected columns.
+     * @param ignoreAdditionalContent
+     *            If true additional columns that do not fit to the expected
+     *            format are silently ignored instead of generating an error.
+     *            Default is false.
+     */
+    public TSVReader(final int numberOfColumns,
+            final boolean ignoreAdditionalContent) {
+        this(numberOfColumns, ignoreAdditionalContent, false);
+    }
 
-	/**
-	 * Flag indicating if additional columns are ignored or reported as error.
-	 */
-	private final boolean m_ignoreAdditionalContent;
+    /**
+     * Construct a TSVReader for the given number of columns.
+     * 
+     * @param numberOfColumns
+     *            The number of expected columns.
+     */
+    public TSVReader(final int numberOfColumns) {
+        this(numberOfColumns, false, false);
+    }
 
-	/**
-	 * Flag indicating if missing columns are treated as errors.
-	 */
-	private final boolean m_ignoreMissingColumns;
+    /**
+     * The number of columns of the tsv file to read.
+     */
+    private final int m_numberOfColumns;
 
-	/**
-	 * The logger instance.
-	 */
-	private static final NodeLogger logger = NodeLogger
-			.getLogger(TSVReader.class);
+    /**
+     * Flag indicating if additional columns are ignored or reported as error.
+     */
+    private final boolean m_ignoreAdditionalContent;
 
-	/**
-	 * The TSV separator.
-	 */
-	private static final String SEPARATOR = "\t";
+    /**
+     * Flag indicating if missing columns are treated as errors.
+     */
+    private final boolean m_ignoreMissingColumns;
 
-	/**
-	 * The header of the tsv file to parse.
-	 * 
-	 * @return A String array containing all the column headers.
-	 */
-	protected abstract String[] getHeader();
+    /**
+     * The logger instance.
+     */
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(TSVReader.class);
 
-	/**
-	 * Checks if the header elements found in the file correspond to those
-	 * defined by the deriving class.
-	 * 
-	 * @param header
-	 *            The header that should be tested.
-	 * @throws Exception
-	 *             If the headers do not match.
-	 */
-	private void compareHeader(String[] header) throws InvalidHeaderException {
-		for (int i = 0; i < m_numberOfColumns && i < header.length; ++i) {
-			if (!header[i].equals(getHeader()[i])) {
-				throw new InvalidHeaderException(getHeader()[i], header[i]);
-			}
-		}
-	}
+    /**
+     * The TSV separator.
+     */
+    private static final String SEPARATOR = "\t";
 
-	/**
-	 * The parse method extracting the different values for the current line.
-	 * 
-	 * @param tokens
-	 *            An array of Strings containing the values that should be
-	 *            extracted.
-	 * @return
-	 */
-	protected abstract DataCell[] parseLine(String[] tokens) throws IOException;
+    /**
+     * The header of the tsv file to parse.
+     * 
+     * @return A String array containing all the column headers.
+     */
+    protected abstract String[] getHeader();
 
-	public void run(File tsvFile, BufferedDataContainer container,
-			final ExecutionContext exec) throws IOException,
-			InvalidLineException, CanceledExecutionException,
-			InvalidHeaderException {
-		BufferedReader brReader = null;
-		try {
-			// read the data and fill the table
-			brReader = new BufferedReader(new InputStreamReader(
-					new FileInputStream(tsvFile)));
+    /**
+     * Checks if the header elements found in the file correspond to those
+     * defined by the deriving class.
+     * 
+     * @param header
+     *            The header that should be tested.
+     * @throws Exception
+     *             If the headers do not match.
+     */
+    private void validateHeader(String headerLine)
+            throws InvalidHeaderException {
+        if (headerLine == null) {
+            throw new InvalidHeaderException(
+                    "Could not extract a header from the given file.");
+        }
 
-			int rowIdx = 1;
+        String[] header = headerLine.trim().split(SEPARATOR, -1);
 
-			// skip but check the header
-			String header = brReader.readLine();
-			String[] headerElements = header.trim().split(SEPARATOR, -1);
+        // validate the amount of columns
+        if (((header.length > m_numberOfColumns) && !m_ignoreAdditionalContent)
+                || (header.length < m_numberOfColumns && !m_ignoreMissingColumns)) {
+            throw new InvalidHeaderException(m_numberOfColumns, header.length);
+        }
 
-			if (((headerElements.length > m_numberOfColumns) && !m_ignoreAdditionalContent)
-					|| (headerElements.length < m_numberOfColumns && !m_ignoreMissingColumns))
-				throw new InvalidHeaderException(m_numberOfColumns,
-						headerElements.length);
+        // validate the actual columns
+        for (int i = 0; i < m_numberOfColumns && i < header.length; ++i) {
+            if (!header[i].equals(getHeader()[i])) {
+                throw new InvalidHeaderException(getHeader()[i], header[i]);
+            }
+        }
+    }
 
-			compareHeader(headerElements);
+    /**
+     * The parse method extracting the different values for the current line.
+     * 
+     * @param tokens
+     *            An array of Strings containing the values that should be
+     *            extracted.
+     * @return The individual values of the current line converted into
+     *         DataCells.
+     */
+    protected abstract DataCell[] parseLine(String[] tokens) throws IOException;
 
-			// for all lines
-			String line;
-			while ((line = brReader.readLine()) != null) {
-				// skip empty line
-				if ("".equals(line.trim()))
-					continue;
+    /**
+     * Parses the tsv given file and adds it's content to the given container.
+     * The ExecutionContext is used to monitor for cancelled execution.
+     * 
+     * @param tsvFile
+     *            The tsv file to parse.
+     * @param container
+     *            The container where the data should be added.
+     * @param exec
+     *            The current execution context to indicate
+     * @throws IOException
+     *             In case IO operations fail.
+     * @throws InvalidLineException
+     *             If one of the lines in the file is invalid.
+     * @throws CanceledExecutionException
+     *             If the node execution was cancelled.
+     * @throws InvalidHeaderException
+     *             If the header of the file does not correspond to the expected
+     *             header.
+     */
+    public void run(File tsvFile, BufferedDataContainer container,
+            final ExecutionContext exec) throws IOException,
+            InvalidLineException, CanceledExecutionException,
+            InvalidHeaderException {
+        BufferedReader brReader = null;
+        try {
+            // read the data and fill the table
+            brReader = new BufferedReader(new InputStreamReader(
+                    new FileInputStream(tsvFile), "UTF-8"));
 
-				String[] tokens = line.trim().split(SEPARATOR, -1);
+            // skip but check the header
+            String header = brReader.readLine();
+            validateHeader(header);
 
-				try {
-					// we try to parse and leave it to the deriving class to
-					// check if everything is correct
-					DataCell[] cells = parseLine(tokens);
+            // for all lines
+            String line;
+            int rowIdx = 1;
 
-					RowKey key = new RowKey("Row " + rowIdx);
-					DataRow row = new DefaultRow(key, cells);
-					container.addRowToTable(row);
-				} catch (Exception ex) {
-					throw new InvalidLineException(rowIdx, line);
-				}
+            while ((line = brReader.readLine()) != null) {
+                // skip empty line
+                if ("".equals(line.trim())) {
+                    continue;
+                }
 
-				exec.checkCanceled();
-				++rowIdx;
-			}
+                String[] tokens = line.trim().split(SEPARATOR, -1);
 
-		} catch (IOException ex) {
-			logger.error(ex.getMessage());
-			throw ex;
-		} finally {
-			if (brReader != null)
-				brReader.close();
-		}
-	}
+                try {
+                    // we try to parse and leave it to the deriving class to
+                    // check if everything is correct
+                    DataCell[] cells = parseLine(tokens);
+
+                    RowKey key = new RowKey("Row " + rowIdx);
+                    DataRow row = new DefaultRow(key, cells);
+                    container.addRowToTable(row);
+                } catch (Exception ex) {
+                    throw new InvalidLineException(rowIdx, line, ex);
+                }
+
+                exec.checkCanceled();
+                ++rowIdx;
+            }
+        } catch (IOException ex) {
+            LOGGER.error(ex.getMessage());
+            throw ex;
+        } finally {
+            if (brReader != null) {
+                brReader.close();
+            }
+        }
+    }
 }

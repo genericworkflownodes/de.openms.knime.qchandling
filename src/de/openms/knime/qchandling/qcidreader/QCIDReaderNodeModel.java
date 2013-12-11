@@ -51,6 +51,8 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
 import de.openms.knime.qchandling.TSVReader;
+import de.openms.knime.qchandling.TSVReader.InvalidHeaderException;
+import de.openms.knime.qchandling.TSVReader.InvalidLineException;
 
 /**
  * This is the model implementation of QCIDReader. Reads ID tsv files from
@@ -60,151 +62,154 @@ import de.openms.knime.qchandling.TSVReader;
  */
 public class QCIDReaderNodeModel extends NodeModel {
 
-	/**
-	 * Static method that provides the incoming {@link PortType}s.
-	 * 
-	 * @return The incoming {@link PortType}s of this node.
-	 */
-	private static PortType[] getIncomingPorts() {
-		return new PortType[] { URIPortObject.TYPE };
-	}
+    private static final int NUMBER_OF_COLUMNS = 7;
 
-	/**
-	 * Static method that provides the outgoing {@link PortType}s.
-	 * 
-	 * @return The outgoing {@link PortType}s of this node.
-	 */
-	private static PortType[] getOutgoingPorts() {
-		return new PortType[] { new PortType(BufferedDataTable.class) };
-	}
+    /**
+     * Static method that provides the incoming {@link PortType}s.
+     * 
+     * @return The incoming {@link PortType}s of this node.
+     */
+    private static PortType[] getIncomingPorts() {
+        return new PortType[] { URIPortObject.TYPE };
+    }
 
-	/**
-	 * Constructor for the node model.
-	 */
-	protected QCIDReaderNodeModel() {
-		super(getIncomingPorts(), getOutgoingPorts());
-	}
+    /**
+     * Static method that provides the outgoing {@link PortType}s.
+     * 
+     * @return The outgoing {@link PortType}s of this node.
+     */
+    private static PortType[] getOutgoingPorts() {
+        return new PortType[] { new PortType(BufferedDataTable.class) };
+    }
 
-	private DataTableSpec createColumnSpec() {
-		// RT MZ uniqueness ProteinID target/decoy Score PeptideSequence Annots
-		// Similarity Charge TheoreticalWeight Oxidation (M)
+    /**
+     * Constructor for the node model.
+     */
+    protected QCIDReaderNodeModel() {
+        super(getIncomingPorts(), getOutgoingPorts());
+    }
 
-		DataColumnSpec[] allColSpecs = new DataColumnSpec[7];
+    private DataTableSpec createColumnSpec() {
+        // RT MZ uniqueness ProteinID target/decoy Score PeptideSequence Annots
+        // Similarity Charge TheoreticalWeight Oxidation (M)
 
-		allColSpecs[0] = new DataColumnSpecCreator("RT", DoubleCell.TYPE)
-				.createSpec();
-		allColSpecs[1] = new DataColumnSpecCreator("MZ", DoubleCell.TYPE)
-				.createSpec();
-		allColSpecs[2] = new DataColumnSpecCreator("Score", DoubleCell.TYPE)
-				.createSpec();
-		allColSpecs[3] = new DataColumnSpecCreator("PeptideSequence",
-				StringCell.TYPE).createSpec();
-		allColSpecs[4] = new DataColumnSpecCreator("Charge", IntCell.TYPE)
-				.createSpec();
-		allColSpecs[5] = new DataColumnSpecCreator("TheoreticalWeight",
-				DoubleCell.TYPE).createSpec();
-		allColSpecs[6] = new DataColumnSpecCreator("DeltaPpm", DoubleCell.TYPE)
-				.createSpec();
+        DataColumnSpec[] allColSpecs = new DataColumnSpec[NUMBER_OF_COLUMNS];
 
-		DataTableSpec outputSpec = new DataTableSpec(allColSpecs);
-		return outputSpec;
-	}
+        allColSpecs[0] = new DataColumnSpecCreator("RT", DoubleCell.TYPE)
+                .createSpec();
+        allColSpecs[1] = new DataColumnSpecCreator("MZ", DoubleCell.TYPE)
+                .createSpec();
+        allColSpecs[2] = new DataColumnSpecCreator("Score", DoubleCell.TYPE)
+                .createSpec();
+        allColSpecs[3] = new DataColumnSpecCreator("PeptideSequence",
+                StringCell.TYPE).createSpec();
+        allColSpecs[4] = new DataColumnSpecCreator("Charge", IntCell.TYPE)
+                .createSpec();
+        allColSpecs[5] = new DataColumnSpecCreator("TheoreticalWeight",
+                DoubleCell.TYPE).createSpec();
+        allColSpecs[6] = new DataColumnSpecCreator("DeltaPpm", DoubleCell.TYPE)
+                .createSpec();
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected BufferedDataTable[] execute(final PortObject[] inData,
-			final ExecutionContext exec) throws Exception {
-		TSVReader featureTSVReader = new TSVReader(7, true) {
+        return new DataTableSpec(allColSpecs);
+    }
 
-			@Override
-			protected DataCell[] parseLine(String[] tokens) {
-				DataCell[] cells = new DataCell[7];
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected BufferedDataTable[] execute(final PortObject[] inData,
+            final ExecutionContext exec) throws IOException,
+            InvalidLineException, CanceledExecutionException,
+            InvalidHeaderException {
+        TSVReader featureTSVReader = new TSVReader(NUMBER_OF_COLUMNS, true) {
 
-				cells[0] = new DoubleCell(Double.parseDouble(tokens[0]));
-				cells[1] = new DoubleCell(Double.parseDouble(tokens[1]));
-				cells[2] = new DoubleCell(Double.parseDouble(tokens[2]));
-				cells[3] = new StringCell(tokens[3]);
-				cells[4] = new IntCell(Integer.parseInt(tokens[4]));
-				cells[5] = new DoubleCell(Double.parseDouble(tokens[5]));
-				cells[6] = new DoubleCell(Double.parseDouble(tokens[6]));
+            @Override
+            protected DataCell[] parseLine(String[] tokens) {
+                DataCell[] cells = new DataCell[NUMBER_OF_COLUMNS];
 
-				return cells;
-			}
+                cells[0] = new DoubleCell(Double.parseDouble(tokens[0]));
+                cells[1] = new DoubleCell(Double.parseDouble(tokens[1]));
+                cells[2] = new DoubleCell(Double.parseDouble(tokens[2]));
+                cells[3] = new StringCell(tokens[3]);
+                cells[4] = new IntCell(Integer.parseInt(tokens[4]));
+                cells[5] = new DoubleCell(Double.parseDouble(tokens[5]));
+                cells[6] = new DoubleCell(Double.parseDouble(tokens[6]));
 
-			@Override
-			protected String[] getHeader() {
-				return new String[] { "RT", "MZ", "Score", "PeptideSequence",
-						"Charge", "TheoreticalWeight", "delta_ppm" };
-			}
-		};
+                return cells;
+            }
 
-		BufferedDataContainer container = exec
-				.createDataContainer(createColumnSpec());
-		featureTSVReader.run(new File(((URIPortObject) inData[0])
-				.getURIContents().get(0).getURI()), container, exec);
+            @Override
+            protected String[] getHeader() {
+                return new String[] { "RT", "MZ", "Score", "PeptideSequence",
+                        "Charge", "TheoreticalWeight", "delta_ppm" };
+            }
+        };
 
-		container.close();
-		BufferedDataTable out = container.getTable();
-		return new BufferedDataTable[] { out };
-	}
+        BufferedDataContainer container = exec
+                .createDataContainer(createColumnSpec());
+        featureTSVReader.run(new File(((URIPortObject) inData[0])
+                .getURIContents().get(0).getURI()), container, exec);
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void reset() {
-	}
+        container.close();
+        BufferedDataTable out = container.getTable();
+        return new BufferedDataTable[] { out };
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs)
-			throws InvalidSettingsException {
-		return new DataTableSpec[] { createColumnSpec() };
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void reset() {
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void saveSettingsTo(final NodeSettingsWO settings) {
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs)
+            throws InvalidSettingsException {
+        return new DataTableSpec[] { createColumnSpec() };
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void validateSettings(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void loadInternals(final File internDir,
-			final ExecutionMonitor exec) throws IOException,
-			CanceledExecutionException {
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void saveInternals(final File internDir,
-			final ExecutionMonitor exec) throws IOException,
-			CanceledExecutionException {
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadInternals(final File internDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveInternals(final File internDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+    }
 
 }

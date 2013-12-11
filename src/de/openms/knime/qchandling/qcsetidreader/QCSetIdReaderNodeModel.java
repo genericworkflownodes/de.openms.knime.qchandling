@@ -50,6 +50,8 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
 import de.openms.knime.qchandling.TSVReader;
+import de.openms.knime.qchandling.TSVReader.InvalidHeaderException;
+import de.openms.knime.qchandling.TSVReader.InvalidLineException;
 
 /**
  * This is the model implementation of QCPrecursorReader. Read the precursor
@@ -59,146 +61,147 @@ import de.openms.knime.qchandling.TSVReader;
  */
 public class QCSetIdReaderNodeModel extends NodeModel {
 
-	/**
-	 * Static method that provides the incoming {@link PortType}s.
-	 * 
-	 * @return The incoming {@link PortType}s of this node.
-	 */
-	private static PortType[] getIncomingPorts() {
-		return new PortType[] { URIPortObject.TYPE };
-	}
+    /**
+     * Static method that provides the incoming {@link PortType}s.
+     * 
+     * @return The incoming {@link PortType}s of this node.
+     */
+    private static PortType[] getIncomingPorts() {
+        return new PortType[] { URIPortObject.TYPE };
+    }
 
-	/**
-	 * Static method that provides the outgoing {@link PortType}s.
-	 * 
-	 * @return The outgoing {@link PortType}s of this node.
-	 */
-	private static PortType[] getOutgoingPorts() {
-		return new PortType[] { new PortType(BufferedDataTable.class) };
-	}
+    /**
+     * Static method that provides the outgoing {@link PortType}s.
+     * 
+     * @return The outgoing {@link PortType}s of this node.
+     */
+    private static PortType[] getOutgoingPorts() {
+        return new PortType[] { new PortType(BufferedDataTable.class) };
+    }
 
-	/**
-	 * Constructor for the node model.
-	 */
-	protected QCSetIdReaderNodeModel() {
-		super(getIncomingPorts(), getOutgoingPorts());
-	}
+    /**
+     * Constructor for the node model.
+     */
+    protected QCSetIdReaderNodeModel() {
+        super(getIncomingPorts(), getOutgoingPorts());
+    }
 
-	private DataTableSpec createColumnSpec() {
-		// RT MZ uniqueness ProteinID target/decoy Score PeptideSequence Annots
-		// Similarity Charge TheoreticalWeight Oxidation (M)
+    private DataTableSpec createColumnSpec() {
+        // RT MZ uniqueness ProteinID target/decoy Score PeptideSequence Annots
+        // Similarity Charge TheoreticalWeight Oxidation (M)
 
-		DataColumnSpec[] allColSpecs = new DataColumnSpec[6];
+        DataColumnSpec[] allColSpecs = new DataColumnSpec[6];
 
-		allColSpecs[0] = new DataColumnSpecCreator("qp", StringCell.TYPE)
-				.createSpec();
-		allColSpecs[1] = new DataColumnSpecCreator("Q1", DoubleCell.TYPE)
-				.createSpec();
-		allColSpecs[2] = new DataColumnSpecCreator("Q2", DoubleCell.TYPE)
-				.createSpec();
-		allColSpecs[3] = new DataColumnSpecCreator("Q3", DoubleCell.TYPE)
-				.createSpec();
-		allColSpecs[4] = new DataColumnSpecCreator("max", DoubleCell.TYPE)
-				.createSpec();
-		allColSpecs[5] = new DataColumnSpecCreator("min", DoubleCell.TYPE)
-				.createSpec();
+        allColSpecs[0] = new DataColumnSpecCreator("qp", StringCell.TYPE)
+                .createSpec();
+        allColSpecs[1] = new DataColumnSpecCreator("Q1", DoubleCell.TYPE)
+                .createSpec();
+        allColSpecs[2] = new DataColumnSpecCreator("Q2", DoubleCell.TYPE)
+                .createSpec();
+        allColSpecs[3] = new DataColumnSpecCreator("Q3", DoubleCell.TYPE)
+                .createSpec();
+        allColSpecs[4] = new DataColumnSpecCreator("max", DoubleCell.TYPE)
+                .createSpec();
+        allColSpecs[5] = new DataColumnSpecCreator("min", DoubleCell.TYPE)
+                .createSpec();
 
-		DataTableSpec outputSpec = new DataTableSpec(allColSpecs);
-		return outputSpec;
-	}
+        return new DataTableSpec(allColSpecs);
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected BufferedDataTable[] execute(final PortObject[] inData,
-			final ExecutionContext exec) throws Exception {
-		TSVReader precursorTSVReader = new TSVReader(6) {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected BufferedDataTable[] execute(final PortObject[] inData,
+            final ExecutionContext exec) throws IOException,
+            InvalidLineException, CanceledExecutionException,
+            InvalidHeaderException {
+        TSVReader precursorTSVReader = new TSVReader(6) {
 
-			@Override
-			protected DataCell[] parseLine(String[] tokens) {
-				DataCell[] cells = new DataCell[6];
+            @Override
+            protected DataCell[] parseLine(String[] tokens) {
+                DataCell[] cells = new DataCell[6];
 
-				cells[0] = new StringCell(tokens[0]);
-				cells[1] = new DoubleCell(Double.parseDouble(tokens[1]));
-				cells[2] = new DoubleCell(Double.parseDouble(tokens[2]));
-				cells[3] = new DoubleCell(Double.parseDouble(tokens[3]));
-				cells[4] = new DoubleCell(Double.parseDouble(tokens[4]));
-				cells[5] = new DoubleCell(Double.parseDouble(tokens[5]));
+                cells[0] = new StringCell(tokens[0]);
+                cells[1] = new DoubleCell(Double.parseDouble(tokens[1]));
+                cells[2] = new DoubleCell(Double.parseDouble(tokens[2]));
+                cells[3] = new DoubleCell(Double.parseDouble(tokens[3]));
+                cells[4] = new DoubleCell(Double.parseDouble(tokens[4]));
+                cells[5] = new DoubleCell(Double.parseDouble(tokens[5]));
 
-				return cells;
-			}
+                return cells;
+            }
 
-			@Override
-			protected String[] getHeader() {
-				return new String[] { "qp", "Q1", "Q2", "Q3", "max", "min" };
-			}
-		};
+            @Override
+            protected String[] getHeader() {
+                return new String[] { "qp", "Q1", "Q2", "Q3", "max", "min" };
+            }
+        };
 
-		BufferedDataContainer container = exec
-				.createDataContainer(createColumnSpec());
-		precursorTSVReader.run(new File(((URIPortObject) inData[0])
-				.getURIContents().get(0).getURI()), container, exec);
+        BufferedDataContainer container = exec
+                .createDataContainer(createColumnSpec());
+        precursorTSVReader.run(new File(((URIPortObject) inData[0])
+                .getURIContents().get(0).getURI()), container, exec);
 
-		container.close();
-		BufferedDataTable out = container.getTable();
-		return new BufferedDataTable[] { out };
-	}
+        container.close();
+        BufferedDataTable out = container.getTable();
+        return new BufferedDataTable[] { out };
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void reset() {
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void reset() {
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs)
-			throws InvalidSettingsException {
-		return new DataTableSpec[] { createColumnSpec() };
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs)
+            throws InvalidSettingsException {
+        return new DataTableSpec[] { createColumnSpec() };
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void saveSettingsTo(final NodeSettingsWO settings) {
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void validateSettings(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void loadInternals(final File internDir,
-			final ExecutionMonitor exec) throws IOException,
-			CanceledExecutionException {
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadInternals(final File internDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void saveInternals(final File internDir,
-			final ExecutionMonitor exec) throws IOException,
-			CanceledExecutionException {
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveInternals(final File internDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+    }
 }
