@@ -57,7 +57,7 @@ public abstract class TSVReader {
     public static class InvalidHeaderException extends Exception {
 
         /**
-         * The serialVersionUID
+         * The serialVersionUID.
          */
         private static final long serialVersionUID = 3447134484787762192L;
 
@@ -237,9 +237,12 @@ public abstract class TSVReader {
 
         String[] header = headerLine.trim().split(SEPARATOR, -1);
 
-        // validate the amount of columns
-        if (((header.length > m_numberOfColumns) && !m_ignoreAdditionalContent)
-                || (header.length < m_numberOfColumns && !m_ignoreMissingColumns)) {
+        // validate if too much columns exist
+        if (((header.length > m_numberOfColumns) && !m_ignoreAdditionalContent)) {
+            throw new InvalidHeaderException(m_numberOfColumns, header.length);
+        }
+        // validate if enough columns exist
+        if ((header.length < m_numberOfColumns) && !m_ignoreMissingColumns) {
             throw new InvalidHeaderException(m_numberOfColumns, header.length);
         }
 
@@ -260,7 +263,7 @@ public abstract class TSVReader {
      * @return The individual values of the current line converted into
      *         DataCells.
      */
-    protected abstract DataCell[] parseLine(String[] tokens) throws IOException;
+    protected abstract DataCell[] parseLine(String[] tokens);
 
     /**
      * Parses the tsv given file and adds it's content to the given container.

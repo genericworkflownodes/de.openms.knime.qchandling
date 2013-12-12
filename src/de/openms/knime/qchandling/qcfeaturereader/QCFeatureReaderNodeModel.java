@@ -128,20 +128,23 @@ public class QCFeatureReaderNodeModel extends NodeModel {
                 cells[2] = new DoubleCell(Double.parseDouble(tokens[2]));
                 cells[3] = new IntCell(Integer.parseInt(tokens[3]));
 
-                if (tokens.length > 4)
+                if (tokens.length > 4) {
                     cells[4] = new DoubleCell(Double.parseDouble(tokens[4]));
-                else
+                } else {
                     cells[4] = new DoubleCell(-1.0);
+                }
 
-                if (tokens.length > 5)
+                if (tokens.length > 5) {
                     cells[5] = new DoubleCell(Double.parseDouble(tokens[5]));
-                else
+                } else {
                     cells[5] = new DoubleCell(-1.0);
+                }
 
-                if (tokens.length > 6)
+                if (tokens.length > 6) {
                     cells[6] = new IntCell(Integer.parseInt(tokens[6]));
-                else
+                } else {
                     cells[6] = new IntCell(-1);
+                }
 
                 return cells;
             }
