@@ -34,7 +34,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.uri.URIPortObject;
+import org.knime.core.data.uri.IURIPortObject;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -66,7 +66,7 @@ public class QCPrecursorReaderNodeModel extends NodeModel {
      * @return The incoming {@link PortType}s of this node.
      */
     private static PortType[] getIncomingPorts() {
-        return new PortType[] { URIPortObject.TYPE };
+        return new PortType[] { IURIPortObject.TYPE };
     }
 
     /**
@@ -126,12 +126,11 @@ public class QCPrecursorReaderNodeModel extends NodeModel {
 
         BufferedDataContainer container = exec
                 .createDataContainer(createColumnSpec());
-        precursorTSVReader.run(new File(((URIPortObject) inData[0])
+        precursorTSVReader.run(new File(((IURIPortObject) inData[0])
                 .getURIContents().get(0).getURI()), container, exec);
 
         container.close();
-        BufferedDataTable out = container.getTable();
-        return new BufferedDataTable[] { out };
+        return new BufferedDataTable[] { container.getTable() };
     }
 
     /**
