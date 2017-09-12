@@ -34,6 +34,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.data.uri.IURIPortObject;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -89,10 +90,16 @@ public class QCPrecursorReaderNodeModel extends NodeModel {
         // RT MZ uniqueness ProteinID target/decoy Score PeptideSequence Annots
         // Similarity Charge TheoreticalWeight Oxidation (M)
 
-        DataColumnSpec[] allColSpecs = new DataColumnSpec[2];
+        DataColumnSpec[] allColSpecs = new DataColumnSpec[5];
         allColSpecs[0] = new DataColumnSpecCreator("RT", DoubleCell.TYPE)
                 .createSpec();
         allColSpecs[1] = new DataColumnSpecCreator("Precursor", DoubleCell.TYPE)
+                .createSpec();
+        allColSpecs[2] = new DataColumnSpecCreator("Charge", IntCell.TYPE)
+                .createSpec();
+        allColSpecs[3] = new DataColumnSpecCreator("S/N", DoubleCell.TYPE)
+                .createSpec();
+        allColSpecs[4] = new DataColumnSpecCreator("Peak Count", IntCell.TYPE)
                 .createSpec();
 
         return new DataTableSpec(allColSpecs);
@@ -106,21 +113,24 @@ public class QCPrecursorReaderNodeModel extends NodeModel {
             final ExecutionContext exec) throws IOException,
             InvalidLineException, CanceledExecutionException,
             InvalidHeaderException {
-        TSVReader precursorTSVReader = new TSVReader(2) {
+        TSVReader precursorTSVReader = new TSVReader(5) {
 
             @Override
             protected DataCell[] parseLine(String[] tokens) {
-                DataCell[] cells = new DataCell[2];
+                DataCell[] cells = new DataCell[5];
 
                 cells[0] = new DoubleCell(Double.parseDouble(tokens[0]));
                 cells[1] = new DoubleCell(Double.parseDouble(tokens[1]));
+                cells[2] = new IntCell(Integer.parseInt(tokens[2]));
+                cells[3] = new DoubleCell(Double.parseDouble(tokens[3]));
+                cells[4] = new IntCell(Integer.parseInt(tokens[4]));
 
                 return cells;
             }
 
             @Override
             protected String[] getHeader() {
-                return new String[] { "MS:1000894_[sec]", "MS:1000040" };
+                return new String[] { "MS:1000894_[sec]", "MS:1000040", "MS:1000041", "S/N", "peak_count" };
             }
         };
 
